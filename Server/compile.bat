@@ -45,7 +45,7 @@ echo Compilazione in corso...
 echo.
 
 REM Compila tutti i file Java
-javac -d bin -cp "%CLASSPATH%" src\com\report\*.java src\com\report\model\*.java src\com\report\service\*.java 2>compile_errors.txt
+javac -d bin -cp "%CLASSPATH%" src\com\report\model\*.java 2>compile_errors.txt
 
 if %ERRORLEVEL% EQU 0 (
     echo.
