@@ -105,6 +105,8 @@ python --version
 
 #### Librerie BIRT 4.21
 Copia tutte le JAR BIRT nella cartella `lib/`
+Puoi recuperarle scaricando birtruntime.zip dal sito https://download.eclipse.org/birt/updates/release/latest/ 
+e successivamente nella cartella estratta al percorso `birtruntime\ReportEngine\lib`
 
 ### 2. Setup
 
