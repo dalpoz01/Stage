@@ -513,4 +513,4 @@ Personalizza secondo le tue esigenze.
 
 **Versione:** 1.0.0  
 **Data:** 2025-01-16  
-**Autore:** Stage2025
+**Autore:** Stefano Dal Poz
