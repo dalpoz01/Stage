@@ -5,7 +5,7 @@ color 0A
 cd /d "%~dp0"
 
 REM Verifica prerequisiti
-if not exist "bin\com\report\model\BirtReportWrapper.class" (
+if not exist "bin\com\report\model\BirtReportEngine.class" (
     echo ================================================================
     echo   ERRORE: Codice Java non compilato!
     echo ================================================================

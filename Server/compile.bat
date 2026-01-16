@@ -24,15 +24,15 @@ javac -version
 echo.
 
 REM Verifica sorgente
-if not exist "src\com\report\model\BirtReportWrapper.java" (
-    echo [FAIL] BirtReportWrapper.java non trovato!
-    echo        Percorso atteso: src\com\report\model\BirtReportWrapper.java
+if not exist "src\com\report\model\BirtReportEngine.java" (
+    echo [FAIL] BirtReportEngine.java non trovato!
+    echo        Percorso atteso: src\com\report\model\BirtReportEngine.java
     pause
     exit /b 1
 )
 
 echo [2/3] File sorgente trovato
-echo       src\com\report\model\BirtReportWrapper.java
+echo       src\com\report\model\BirtReportEngine.java
 echo.
 
 REM Verifica librerie
@@ -56,7 +56,7 @@ REM Crea directory bin se non esiste
 if not exist "bin" mkdir bin
 
 REM Compila con classpath
-javac -d bin -cp "lib\*" src\com\report\model\BirtReportWrapper.java 2>compile_errors.txt
+javac -d bin -cp "lib\*" src\com\report\model\BirtReportEngine.java 2>compile_errors.txt
 
 if %ERRORLEVEL% EQU 0 (
     echo ================================================================

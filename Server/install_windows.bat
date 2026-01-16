@@ -77,8 +77,8 @@ echo.
 
 set MISSING_FILES=0
 
-if not exist "src\com\report\model\BirtReportWrapper.java" (
-    echo   [WARN] BirtReportWrapper.java non trovato in src\com\report\model\
+if not exist "src\com\report\model\BirtReportEngine.java" (
+    echo   [WARN] BirtReportEngine.java non trovato in src\com\report\model\
     set MISSING_FILES=1
 )
 
@@ -143,7 +143,7 @@ echo.
 echo   PROSSIMI PASSI:
 echo.
 echo   1. Copia i file sorgente:
-echo      - BirtReportWrapper.java  in  src\com\report\model\
+echo      - BirtReportEngine.java  in  src\com\report\model\
 echo      - server.py               in  root\
 echo      - requirements.txt        in  root\
 echo      - test-client.html        in  root\

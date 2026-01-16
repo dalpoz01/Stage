@@ -26,7 +26,7 @@ import java.util.logging.Level;
  *      "C:/Users/stage01/reports/birt" \
  *      "PDF"
  */
-public class BirtReportWrapper {
+public class BirtReportEngine {
     
     public static void main(String[] args) {
         // Validazione argomenti

@@ -95,7 +95,7 @@ def generate_birt_report(birt_file_path, json_api_url, output_format):
         java_cmd = [
             "java",
             "-cp", classpath,
-            "com.report.model.BirtReportWrapper",  # Classe wrapper con main()
+            "com.report.model.BirtReportEngine",  # Classe wrapper con main()
             str(birt_file_path),
             json_api_url,
             str(OUTPUT_DIR),

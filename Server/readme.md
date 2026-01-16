@@ -61,9 +61,9 @@ chmod +x start-server.sh && ./start-server.sh
 ```
 BirtReportServer/
 ├── src/com/report/model/
-│   └── BirtReportWrapper.java      # Wrapper Java BIRT
+│   └── BirtReportEngine.java      # Wrapper Java BIRT
 ├── bin/com/report/model/
-│   ├── BirtReportWrapper.class     # Compilati
+│   ├── BirtReportEngine.class     # Compilati
 │   └── BirtDesignToDocument.class
 ├── lib/
 │   └── *.jar                       # Librerie BIRT 4.21
@@ -125,7 +125,7 @@ Questo crea:
 ### 3. Copia File
 
 **Codice Java:**
-- `BirtReportWrapper.java` → `src/com/report/model/`
+- `BirtReportEngine.java` → `src/com/report/model/`
 
 **Python:**
 - `server.py` → root
@@ -432,7 +432,7 @@ WORKDIR /app
 COPY . .
 
 RUN pip install -r requirements.txt
-RUN javac -d bin -cp "lib/*" src/com/report/model/BirtReportWrapper.java
+RUN javac -d bin -cp "lib/*" src/com/report/model/BirtReportEngine.java
 
 EXPOSE 5000
 CMD ["python", "server.py"]
@@ -491,7 +491,7 @@ C:\Users\<user>\reports\logs\server.log
 
 ### Test Manuale Java
 ```cmd
-java -cp "bin;lib/*" com.report.model.BirtReportWrapper ^
+java -cp "bin;lib/*" com.report.model.BirtReportEngine ^
   test.rptdesign ^
   https://jsonplaceholder.typicode.com/users ^
   C:\Users\stage01\reports\output ^
