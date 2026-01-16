@@ -331,7 +331,8 @@ def print_banner():
     print("    GET  /api/reports/formats   - Formati supportati")
     print("    POST /api/reports/generate  - Genera report")
     print("    POST /api/reports/cleanup   - Pulisci file vecchi")
-    print("\n  💡 Test con: test-client.html")
+    print("\n  💡 Test con: - test-client.html ")
+    print("\n               - Comando curl:")
     print("  ⛔ Premi CTRL+C per fermare il server")
     print("="*70 + "\n")
 

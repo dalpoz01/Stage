@@ -16,10 +16,10 @@ import java.util.logging.Level;
  * Compatibile con Java 21 e BIRT 4.21
  * 
  * Usage:
- * java com.report.model.BirtReportWrapper <birtFile> <jsonApiUrl> <outputDir> <birtHome> <format>
+ * java com.report.model.BirtReportEngine <birtFile> <jsonApiUrl> <outputDir> <birtHome> <format>
  * 
  * Esempio:
- * java -cp "bin;lib/*" com.report.model.BirtReportWrapper \
+ * java -cp "bin;lib/*" com.report.model.BirtReportEngine \
  *      "uploads/report.rptdesign" \
  *      "https://api.example.com/data" \
  *      "C:/Users/stage01/reports/output" \
@@ -58,7 +58,7 @@ public class BirtReportEngine {
         
         try {
             // Crea generatore
-            BirtDesignToDocument generator = new BirtDesignToDocument(
+            BirtDesignToDocument document = new BirtDesignToDocument(
                 jsonApiUrl,
                 birtFile,
                 outputDir,
@@ -66,7 +66,7 @@ public class BirtReportEngine {
             );
             
             // Genera documento
-            String outputPath = generator.generateDocument(format);
+            String outputPath = document.generateDocument(format);
             
             if (outputPath != null) {
                 // Stampa il path del file generato (importante per Python)
