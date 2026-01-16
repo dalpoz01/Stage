@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.Python
+ECHO disattivato.
+# Java
+*.class
+bin/
+ECHO disattivato.
+# BIRT
+lib/*.jar
+ECHO disattivato.
+# Output
+reports/
+*.log

@@ -1,3 +1,6 @@
-Flask==3.0.0
-flask-cors==4.0.0
-Werkzeug==3.0.1
+# BIRT Report Server - Dipendenze Python
+# Compatible with Python 3.14 (and 3.8+)
+
+Flask==3.0.3
+flask-cors==5.0.0
+Werkzeug==3.0.4

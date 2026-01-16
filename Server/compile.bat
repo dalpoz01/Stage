@@ -2,72 +2,92 @@
 title Compilazione BIRT Report Server
 color 0B
 
-echo ========================================
-echo   Compilazione Progetto
-echo ========================================
+echo ================================================================
+echo   COMPILAZIONE JAVA
+echo ================================================================
 echo.
 
-REM Vai alla directory del progetto
 cd /d "%~dp0"
 
 REM Verifica Java
-where java >nul 2>nul
+where javac >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
-    echo ERRORE: Java non trovato!
-    echo Installa Java 17+ e aggiungilo al PATH
+    echo [FAIL] javac non trovato!
+    echo.
+    echo Verifica che Java JDK 21+ sia installato e nel PATH
     pause
     exit /b 1
 )
 
-echo Versione Java:
-java -version
+echo [1/3] Versione Java:
+javac -version
+echo.
+
+REM Verifica sorgente
+if not exist "src\com\report\model\BirtReportWrapper.java" (
+    echo [FAIL] BirtReportWrapper.java non trovato!
+    echo        Percorso atteso: src\com\report\model\BirtReportWrapper.java
+    pause
+    exit /b 1
+)
+
+echo [2/3] File sorgente trovato
+echo       src\com\report\model\BirtReportWrapper.java
+echo.
+
+REM Verifica librerie
+set LIB_COUNT=0
+for %%f in (lib\*.jar) do set /a LIB_COUNT+=1
+
+if %LIB_COUNT%==0 (
+    echo [WARN] Nessuna libreria JAR trovata in lib\
+    echo.
+    echo        Copia le librerie BIRT nella cartella lib\
+    echo        Esempio: xcopy /s "E:\Stage2025\Stage\Server\lib*.jar" "lib\"
+    echo.
+    echo        Provo comunque a compilare...
+    echo.
+)
+
+echo [3/3] Compilazione in corso...
 echo.
 
 REM Crea directory bin se non esiste
 if not exist "bin" mkdir bin
 
-REM Costruisci il classpath con tutte le librerie
-echo Costruzione classpath...
-set CLASSPATH=.
-for %%i in (lib\*.jar) do call :addToClasspath %%i
-goto :continue
-
-:addToClasspath
-set CLASSPATH=%CLASSPATH%;%1
-goto :eof
-
-:continue
-
-echo.
-echo Classpath configurato
-echo.
-echo Compilazione in corso...
-echo.
-
-REM Compila tutti i file Java
-javac -d bin -cp "%CLASSPATH%" src\com\report\model\*.java 2>compile_errors.txt
+REM Compila con classpath
+javac -d bin -cp "lib\*" src\com\report\model\BirtReportWrapper.java 2>compile_errors.txt
 
 if %ERRORLEVEL% EQU 0 (
+    echo ================================================================
+    echo   COMPILAZIONE COMPLETATA CON SUCCESSO!
+    echo ================================================================
     echo.
-    echo ========================================
-    echo   COMPILAZIONE COMPLETATA!
-    echo ========================================
+    echo   File generati:
+    dir /b bin\com\report\model\*.class 2>nul
     echo.
-    echo File .class generati in: bin\
-    echo.
-    echo Per avviare il server: start-server.bat
+    echo   Prossimo passo: start-server.bat
     echo.
     
     REM Elimina file errori se vuoto
     for %%A in (compile_errors.txt) do if %%~zA==0 del compile_errors.txt
 ) else (
-    echo.
-    echo ========================================
+    echo ================================================================
     echo   ERRORI DI COMPILAZIONE!
-    echo ========================================
+    echo ================================================================
     echo.
-    echo Controlla il file: compile_errors.txt
+    echo   Dettagli errori:
     type compile_errors.txt
+    echo.
+    echo   POSSIBILI CAUSE:
+    echo   1. Librerie BIRT mancanti in lib\
+    echo   2. Versione Java incompatibile (serve Java 21+)
+    echo   3. Versione BIRT incompatibile (serve BIRT 4.21 con Java 21)
+    echo.
+    echo   SOLUZIONI:
+    echo   - Verifica Java: java -version
+    echo   - Copia librerie BIRT 4.21 in lib\
+    echo   - Se usi BIRT compilato per Java 8, aggiorna a BIRT 4.21+
     echo.
 )
 

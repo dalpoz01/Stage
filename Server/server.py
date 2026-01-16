@@ -3,13 +3,17 @@
 BIRT Report Server - Python Version
 Server REST API per generazione report BIRT
 Compatibile con Windows, Linux e macOS
+
+Requisiti:
+- Java 21+
+- BIRT 4.21
+- Python 3.14 (o 3.8+)
 """
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import os
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 from datetime import datetime
@@ -18,7 +22,7 @@ from werkzeug.utils import secure_filename
 
 # Configurazione
 app = Flask(__name__)
-CORS(app)  # Abilita CORS per tutte le route
+CORS(app)  # Abilita CORS
 
 # Directory configurabili
 HOME_DIR = Path.home()
@@ -32,23 +36,31 @@ LOG_DIR = BASE_DIR / "logs"
 ALLOWED_EXTENSIONS = {'rptdesign'}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
-# Logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(LOG_DIR / "server.log"),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# Logger (configurato dopo create_directories)
+logger = None
 
 
 def create_directories():
     """Crea le directory necessarie se non esistono"""
     for directory in [UPLOAD_DIR, OUTPUT_DIR, BIRT_HOME, LOG_DIR]:
         directory.mkdir(parents=True, exist_ok=True)
-    logger.info(f"Directory create/verificate in: {BASE_DIR}")
+    print(f"✓ Directory create/verificate in: {BASE_DIR}")
+
+
+def setup_logging():
+    """Configura il logging dopo aver creato le directory"""
+    global logger
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(LOG_DIR / "server.log", encoding='utf-8'),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
+    logger.info("✓ Logging inizializzato")
 
 
 def allowed_file(filename):
@@ -58,7 +70,7 @@ def allowed_file(filename):
 
 def generate_birt_report(birt_file_path, json_api_url, output_format):
     """
-    Genera un report BIRT chiamando il generatore Java
+    Genera un report BIRT chiamando il wrapper Java
     
     Args:
         birt_file_path: Path del file .rptdesign
@@ -69,15 +81,21 @@ def generate_birt_report(birt_file_path, json_api_url, output_format):
         Path del file generato o None in caso di errore
     """
     try:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = OUTPUT_DIR / f"report_{timestamp}.{output_format.lower()}"
+        # Costruisci il classpath corretto per il sistema operativo
+        if os.name == 'nt':  # Windows
+            classpath_sep = ';'
+            lib_pattern = 'lib\\*'
+        else:  # Linux/macOS
+            classpath_sep = ':'
+            lib_pattern = 'lib/*'
         
-        # Costruisci il comando Java
-        # Nota: Devi avere il tuo BirtDesignToDocument compilato e nel classpath
+        classpath = f"bin{classpath_sep}{lib_pattern}"
+        
+        # Comando Java con tutti i parametri
         java_cmd = [
             "java",
-            "-cp", f"bin{os.pathsep}lib/*",  # Classpath
-            "com.report.model.BirtDesignToDocument",
+            "-cp", classpath,
+            "com.report.model.BirtReportWrapper",  # Classe wrapper con main()
             str(birt_file_path),
             json_api_url,
             str(OUTPUT_DIR),
@@ -85,26 +103,57 @@ def generate_birt_report(birt_file_path, json_api_url, output_format):
             output_format
         ]
         
-        # Esegui il comando
+        logger.info(f"Esecuzione comando Java:")
+        logger.info(f"  {' '.join(java_cmd)}")
+        logger.info(f"  Working dir: {os.getcwd()}")
+        
+        # Esegui il comando Java
         result = subprocess.run(
             java_cmd,
             capture_output=True,
             text=True,
-            timeout=300  # 5 minuti timeout
+            timeout=300,  # 5 minuti timeout
+            cwd=os.getcwd(),
+            encoding='utf-8',
+            errors='replace'
         )
         
+        # Analizza output
         if result.returncode == 0:
-            logger.info(f"Report generato con successo: {output_file}")
-            return output_file
+            # Cerca "SUCCESS:" nell'output
+            for line in result.stdout.split('\n'):
+                if line.startswith('SUCCESS:'):
+                    output_path = line.replace('SUCCESS:', '').strip()
+                    output_file = Path(output_path)
+                    
+                    if output_file.exists():
+                        logger.info(f"✓ Report generato: {output_file}")
+                        return output_file
+            
+            # Se non trova SUCCESS, cerca l'ultimo file generato
+            output_files = list(OUTPUT_DIR.glob(f"report*.{output_format.lower()}"))
+            if output_files:
+                latest_file = max(output_files, key=lambda p: p.stat().st_mtime)
+                logger.info(f"✓ Report generato (fallback): {latest_file}")
+                return latest_file
+            
+            logger.error("✗ Nessun file di output trovato")
+            logger.error(f"STDOUT: {result.stdout}")
+            return None
         else:
-            logger.error(f"Errore generazione report: {result.stderr}")
+            logger.error(f"✗ Errore generazione report (exit code {result.returncode})")
+            logger.error(f"STDOUT:\n{result.stdout}")
+            logger.error(f"STDERR:\n{result.stderr}")
             return None
             
     except subprocess.TimeoutExpired:
-        logger.error("Timeout durante la generazione del report")
+        logger.error("✗ Timeout durante la generazione del report (>5 min)")
+        return None
+    except FileNotFoundError:
+        logger.error("✗ Java non trovato! Verifica che Java 21+ sia installato e nel PATH")
         return None
     except Exception as e:
-        logger.error(f"Errore imprevisto: {str(e)}")
+        logger.error(f"✗ Errore imprevisto: {str(e)}", exc_info=True)
         return None
 
 
@@ -113,7 +162,11 @@ def health_check():
     """Endpoint per verificare lo stato del server"""
     return jsonify({
         "status": "UP",
-        "service": "Report Generation Service",
+        "service": "BIRT Report Generation Service",
+        "version": "1.0",
+        "java": "21+",
+        "birt": "4.21",
+        "python": "3.14",
         "timestamp": datetime.now().isoformat()
     })
 
@@ -159,7 +212,7 @@ def generate_report():
         
         output_format = request.form.get('format', 'PDF').upper()
         if output_format not in ['PDF', 'XLSX', 'HTML', 'DOC']:
-            return jsonify({"error": "Formato non supportato"}), 400
+            return jsonify({"error": f"Formato '{output_format}' non supportato. Usa: PDF, XLSX, HTML, DOC"}), 400
         
         # Salva il file temporaneamente
         filename = secure_filename(file.filename)
@@ -168,16 +221,18 @@ def generate_report():
         temp_path = UPLOAD_DIR / temp_filename
         
         file.save(temp_path)
-        logger.info(f"File salvato: {temp_path}")
+        logger.info(f"✓ File ricevuto: {temp_filename} ({file.content_length} bytes)")
         
         # Genera il report
+        logger.info(f"→ Generazione report {output_format} in corso...")
         output_path = generate_birt_report(temp_path, json_api_url, output_format)
         
         # Elimina il file temporaneo
         try:
             temp_path.unlink()
+            logger.info(f"✓ File temporaneo eliminato: {temp_filename}")
         except Exception as e:
-            logger.warning(f"Impossibile eliminare file temporaneo: {e}")
+            logger.warning(f"⚠ Impossibile eliminare file temporaneo: {e}")
         
         if output_path is None or not output_path.exists():
             return jsonify({"error": "Errore durante la generazione del report"}), 500
@@ -191,7 +246,7 @@ def generate_report():
         )
         
     except Exception as e:
-        logger.error(f"Errore nel generate_report: {str(e)}")
+        logger.error(f"✗ Errore nel generate_report: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -226,17 +281,18 @@ def cleanup_old_files():
                 try:
                     file_path.unlink()
                     deleted_count += 1
-                    logger.info(f"Eliminato: {file_path}")
+                    logger.info(f"✓ Eliminato: {file_path.name}")
                 except Exception as e:
-                    logger.error(f"Errore eliminazione {file_path}: {e}")
+                    logger.error(f"✗ Errore eliminazione {file_path.name}: {e}")
         
         return jsonify({
             "message": f"Pulizia completata",
-            "deleted_files": deleted_count
+            "deleted_files": deleted_count,
+            "days": days
         })
         
     except Exception as e:
-        logger.error(f"Errore cleanup: {str(e)}")
+        logger.error(f"✗ Errore cleanup: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -249,39 +305,58 @@ def request_entity_too_large(error):
 @app.errorhandler(500)
 def internal_error(error):
     """Handler per errori interni"""
-    logger.error(f"Errore interno del server: {error}")
+    logger.error(f"✗ Errore interno del server: {error}")
     return jsonify({"error": "Errore interno del server"}), 500
 
 
 def print_banner():
     """Stampa il banner di avvio"""
-    print("\n" + "="*60)
-    print("          BIRT REPORT SERVER - PYTHON VERSION")
-    print("="*60)
-    print(f"  Server:        http://localhost:5000")
-    print(f"  Uploads:       {UPLOAD_DIR}")
-    print(f"  Output:        {OUTPUT_DIR}")
-    print(f"  Logs:          {LOG_DIR}")
-    print("\n  Endpoints disponibili:")
-    print("    GET  /api/reports/health")
-    print("    GET  /api/reports/formats")
-    print("    POST /api/reports/generate")
-    print("    POST /api/reports/cleanup")
-    print("\n  Premi CTRL+C per fermare il server")
-    print("="*60 + "\n")
+    print("\n" + "="*70)
+    print("  ██████╗ ██╗██████╗ ████████╗    ██████╗ ███████╗██████╗  ██████╗ ██████╗ ████████╗")
+    print("  ██╔══██╗██║██╔══██╗╚══██╔══╝    ██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝")
+    print("  ██████╔╝██║██████╔╝   ██║       ██████╔╝█████╗  ██████╔╝██║   ██║██████╔╝   ██║   ")
+    print("  ██╔══██╗██║██╔══██╗   ██║       ██╔══██╗██╔══╝  ██╔═══╝ ██║   ██║██╔══██╗   ██║   ")
+    print("  ██████╔╝██║██║  ██║   ██║       ██║  ██║███████╗██║     ╚██████╔╝██║  ██║   ██║   ")
+    print("  ╚═════╝ ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ")
+    print("="*70)
+    print(f"  🚀 Server:        http://localhost:5000")
+    print(f"  📦 Java:          21+")
+    print(f"  📊 BIRT:          4.21")
+    print(f"  🐍 Python:        3.14")
+    print(f"  📁 Uploads:       {UPLOAD_DIR}")
+    print(f"  📄 Output:        {OUTPUT_DIR}")
+    print(f"  📝 Logs:          {LOG_DIR / 'server.log'}")
+    print("\n  📡 Endpoints disponibili:")
+    print("    GET  /api/reports/health    - Verifica stato server")
+    print("    GET  /api/reports/formats   - Formati supportati")
+    print("    POST /api/reports/generate  - Genera report")
+    print("    POST /api/reports/cleanup   - Pulisci file vecchi")
+    print("\n  💡 Test con: test-client.html")
+    print("  ⛔ Premi CTRL+C per fermare il server")
+    print("="*70 + "\n")
 
 
 if __name__ == '__main__':
-    # Crea le directory
+    # 1. Crea le directory PRIMA di configurare il logging
     create_directories()
     
-    # Stampa banner
+    # 2. Configura logging DOPO aver creato le directory
+    setup_logging()
+    
+    # 3. Stampa banner
     print_banner()
     
-    # Avvia il server
-    app.run(
-        host='0.0.0.0',  # Ascolta su tutte le interfacce
-        port=5000,
-        debug=False,
-        threaded=True
-    )
+    # 4. Avvia il server
+    try:
+        app.run(
+            host='0.0.0.0',  # Ascolta su tutte le interfacce
+            port=5000,
+            debug=False,
+            threaded=True
+        )
+    except KeyboardInterrupt:
+        print("\n\n✓ Server fermato dall'utente")
+        logger.info("Server fermato dall'utente")
+    except Exception as e:
+        print(f"\n\n✗ Errore avvio server: {e}")
+        logger.error(f"Errore avvio server: {e}", exc_info=True)

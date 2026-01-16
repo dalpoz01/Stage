@@ -1,197 +1,240 @@
-# 🐍 BIRT Report Server - Python Version
+# 🚀 BIRT Report Server
 
-Server REST API multipiattaforma per generazione report BIRT.
+Server REST API per generazione report BIRT multipiattaforma.
 
-**✅ Funziona su: Windows, Linux, macOS**
+## 📋 Specifiche Tecniche
 
-## 🎯 Architettura
+- **Java**: 21+
+- **BIRT**: 4.21
+- **Python**: 3.14 (compatibile con 3.8+)
+- **OS**: Windows, Linux, macOS
 
-```
-┌─────────────┐
-│   Client    │ (Browser, cURL, Postman, ecc.)
-└──────┬──────┘
-       │ HTTP REST
-       ▼
-┌─────────────┐
-│   Python    │ Flask Web Server (server.py)
-│   Server    │ - Gestisce HTTP requests
-└──────┬──────┘ - Upload file
-       │         - CORS
-       │ subprocess
-       ▼
-┌─────────────┐
-│    Java     │ BIRT Engine (BirtReportWrapper.java)
-│   BIRT      │ - Genera report PDF/XLSX/HTML/DOC
-└─────────────┘
-```
+---
 
-## 📦 Prerequisiti
-
-### Windows
-- **Python 3.8+**: https://www.python.org/downloads/
-- **Java 17+**: https://adoptium.net/
-- **Librerie BIRT**: Dal tuo progetto esistente
-
-### Linux (Ubuntu/Debian)
-```bash
-sudo apt update
-sudo apt install python3 python3-pip python3-venv
-sudo apt install default-jdk
-```
-
-### Linux (CentOS/RHEL)
-```bash
-sudo yum install python3 python3-pip
-sudo yum install java-17-openjdk-devel
-```
-
-### macOS
-```bash
-brew install python3
-brew install openjdk@17
-```
-
-## 🚀 Installazione
+## 🎯 Quick Start (5 minuti)
 
 ### Windows
 
-**1. Scarica/Estrai il progetto:**
 ```cmd
-cd C:\
-mkdir BirtReportServer
-cd BirtReportServer
-```
+REM 1. Setup struttura
+setup.bat
 
-**2. Copia i file:**
-- `server.py`
-- `requirements.txt`
-- `install.bat`
-- `start-server.bat`
-- `test-client.html`
+REM 2. Copia librerie BIRT in lib\
+xcopy /s "E:\Stage2025\Stage\Server\lib*.jar" "lib\"
 
-**3. Installa dipendenze Python:**
-```cmd
+REM 3. Installa Python
 install.bat
-```
 
-**4. Compila il wrapper Java:**
-```cmd
+REM 4. Compila Java
 compile.bat
-```
-(Questo compila BirtReportWrapper.java)
 
-**5. Avvia il server:**
-```cmd
+REM 5. Avvia server
 start-server.bat
+
+REM 6. Apri test-client.html nel browser
 ```
 
-### Linux/macOS
+### Linux
 
-**1. Scarica/Estrai il progetto:**
 ```bash
-cd ~
-mkdir BirtReportServer
-cd BirtReportServer
+# 1. Setup struttura
+chmod +x setup.sh && ./setup.sh
+
+# 2. Copia librerie BIRT in lib/
+
+# 3. Installa Python
+chmod +x install.sh && ./install.sh
+
+# 4. Compila Java
+chmod +x compile.sh && ./compile.sh
+
+# 5. Avvia server
+chmod +x start-server.sh && ./start-server.sh
+
+# 6. Apri test-client.html nel browser
 ```
 
-**2. Copia i file e rendi eseguibili gli script:**
-```bash
-chmod +x install.sh
-chmod +x start-server.sh
-```
-
-**3. Installa dipendenze Python:**
-```bash
-./install.sh
-```
-
-**4. Compila il wrapper Java:**
-```bash
-javac -d bin -cp "lib/*" src/com/report/model/BirtReportWrapper.java
-```
-
-**5. Avvia il server:**
-```bash
-./start-server.sh
-```
+---
 
 ## 📂 Struttura Progetto
 
 ```
 BirtReportServer/
-├── server.py                    ← Server Python Flask
-├── requirements.txt             ← Dipendenze Python
-├── install.bat                  ← Installazione Windows
-├── install.sh                   ← Installazione Linux/macOS
-├── start-server.bat             ← Avvio Windows
-├── start-server.sh              ← Avvio Linux/macOS
-├── test-client.html             ← Client di test
-│
-├── src/                         ← Codice Java
-│   └── com/report/model/
-│       └── BirtReportWrapper.java
-│
-├── bin/                         ← Java compilati
-├── lib/                         ← Librerie BIRT (JAR)
-│
-└── ~/reports/                   ← Directory runtime (auto-create)
-    ├── uploads/                 ← File BIRT temporanei
-    ├── output/                  ← Report generati
-    ├── birt/                    ← BIRT home
-    └── logs/                    ← Log server
+├── src/com/report/model/
+│   └── BirtReportWrapper.java      # Wrapper Java BIRT
+├── bin/com/report/model/
+│   ├── BirtReportWrapper.class     # Compilati
+│   └── BirtDesignToDocument.class
+├── lib/
+│   └── *.jar                       # Librerie BIRT 4.21
+├── server.py                       # Server REST Flask
+├── requirements.txt                # Dipendenze Python
+├── test-client.html                # Client test
+├── setup.bat / setup.sh            # Setup iniziale
+├── compile.bat / compile.sh        # Compilazione
+├── start-server.bat / start-server.sh  # Avvio
+└── install.bat / install.sh        # Installa Python deps
+
+Runtime (auto-create):
+C:\Users\<user>\reports/
+├── uploads/                        # File temporanei
+├── output/                         # Report generati
+├── birt/                           # BIRT home
+└── logs/server.log                 # Log
 ```
+
+---
+
+## 🔧 Installazione Dettagliata
+
+### 1. Prerequisiti
+
+#### Java 21+
+```cmd
+REM Scarica da: https://adoptium.net/temurin/releases/?version=21
+REM Verifica:
+java -version
+```
+
+#### Python 3.8+
+```cmd
+REM Scarica da: https://www.python.org/downloads/
+REM Verifica:
+python --version
+```
+
+#### Librerie BIRT 4.21
+Copia tutte le JAR BIRT nella cartella `lib/`
+
+### 2. Setup
+
+```cmd
+REM Windows
+setup.bat
+
+# Linux
+./setup.sh
+```
+
+Questo crea:
+- Directory `src/`, `bin/`, `lib/`
+- File `.gitignore`
+
+### 3. Copia File
+
+**Codice Java:**
+- `BirtReportWrapper.java` → `src/com/report/model/`
+
+**Python:**
+- `server.py` → root
+- `requirements.txt` → root
+
+**Test:**
+- `test-client.html` → root
+
+**Librerie BIRT:**
+```cmd
+xcopy /s "E:\TuoProgettoOriginale\lib\*.jar" "lib\"
+```
+
+### 4. Installa Dipendenze Python
+
+```cmd
+REM Windows
+install.bat
+
+# Linux
+./install.sh
+```
+
+Installa: Flask, flask-cors, Werkzeug
+
+### 5. Compila Java
+
+```cmd
+REM Windows
+compile.bat
+
+# Linux
+./compile.sh
+```
+
+Genera file `.class` in `bin/`
+
+### 6. Avvia Server
+
+```cmd
+REM Windows
+start-server.bat
+
+# Linux
+./start-server.sh
+```
+
+Server disponibile su: **http://localhost:5000**
+
+---
 
 ## 🌐 API Endpoints
 
-Il server risponde su **http://localhost:5000**
-
-### 1. Health Check
+### Health Check
 ```bash
 curl http://localhost:5000/api/reports/health
 ```
-Risposta:
+
+**Risposta:**
 ```json
 {
   "status": "UP",
-  "service": "Report Generation Service",
-  "timestamp": "2024-01-15T10:30:00.000Z"
+  "service": "BIRT Report Generation Service",
+  "version": "1.0",
+  "java": "21+",
+  "birt": "4.21",
+  "python": "3.14"
 }
 ```
 
-### 2. Formati Supportati
+### Formati Supportati
 ```bash
 curl http://localhost:5000/api/reports/formats
 ```
-Risposta:
+
+**Risposta:**
 ```json
 {
   "formats": ["PDF", "XLSX", "HTML", "DOC"]
 }
 ```
 
-### 3. Genera Report
+### Genera Report
 ```bash
 curl -X POST http://localhost:5000/api/reports/generate \
-  -F "birtFile=@/path/to/report.rptdesign" \
+  -F "birtFile=@report.rptdesign" \
   -F "jsonApiUrl=https://api.example.com/data" \
   -F "format=PDF" \
   --output report.pdf
 ```
 
-### 4. Pulizia File Vecchi
+**Parametri:**
+- `birtFile`: File .rptdesign (obbligatorio)
+- `jsonApiUrl`: URL API JSON (obbligatorio)
+- `format`: PDF|XLSX|HTML|DOC (opzionale, default: PDF)
+
+### Pulizia File Vecchi
 ```bash
 curl -X POST http://localhost:5000/api/reports/cleanup \
   -H "Content-Type: application/json" \
   -d '{"days": 7}'
 ```
 
+---
+
 ## 🧪 Test
 
-### Metodo 1: Client HTML
+### 1. Client HTML
 Apri `test-client.html` nel browser.
-**Cambia l'URL del server a: `http://localhost:5000`**
 
-### Metodo 2: cURL (Windows)
+### 2. cURL (Windows)
 ```cmd
 curl -X POST http://localhost:5000/api/reports/generate ^
   -F "birtFile=@C:\path\to\report.rptdesign" ^
@@ -200,345 +243,274 @@ curl -X POST http://localhost:5000/api/reports/generate ^
   --output report.pdf
 ```
 
-### Metodo 3: cURL (Linux/macOS)
-```bash
-curl -X POST http://localhost:5000/api/reports/generate \
-  -F "birtFile=@/path/to/report.rptdesign" \
-  -F "jsonApiUrl=https://jsonplaceholder.typicode.com/users" \
-  -F "format=PDF" \
-  --output report.pdf
-```
-
-### Metodo 4: Python Script
+### 3. Python Script
 ```python
 import requests
 
-url = "http://localhost:5000/api/reports/generate"
+files = {'birtFile': open('report.rptdesign', 'rb')}
+data = {'jsonApiUrl': 'https://api.example.com/data', 'format': 'PDF'}
 
-files = {
-    'birtFile': open('report.rptdesign', 'rb')
-}
-
-data = {
-    'jsonApiUrl': 'https://api.example.com/data',
-    'format': 'PDF'
-}
-
-response = requests.post(url, files=files, data=data)
+response = requests.post('http://localhost:5000/api/reports/generate', 
+                        files=files, data=data)
 
 if response.status_code == 200:
     with open('report.pdf', 'wb') as f:
         f.write(response.content)
-    print("Report generato!")
-else:
-    print(f"Errore: {response.json()}")
 ```
+
+---
 
 ## ⚙️ Configurazione
 
 ### Cambiare Porta
-
-Modifica `server.py`:
+**File:** `server.py` (fine file)
 ```python
-app.run(
-    host='0.0.0.0',
-    port=8080,  # Era 5000
-    debug=False
-)
+app.run(host='0.0.0.0', port=8080, debug=False)  # Era 5000
 ```
 
-### Cambiare Directory
-
-Modifica `server.py`:
+### Cambiare Directory Output
+**File:** `server.py` (inizio file)
 ```python
-BASE_DIR = Path("/custom/path/reports")
+BASE_DIR = Path("C:/CustomPath/reports")  # Default: Path.home() / "reports"
 ```
 
-### Abilitare Debug Mode
-
-Modifica `server.py`:
+### Timeout Generazione
+**File:** `server.py` (funzione generate_birt_report)
 ```python
-app.run(
-    host='0.0.0.0',
-    port=5000,
-    debug=True,  # Era False
-    threaded=True
-)
+result = subprocess.run(java_cmd, timeout=600)  # 10 min (era 300)
 ```
 
-⚠️ **NON usare debug=True in produzione!**
+---
 
-## 🐳 Docker (Opzionale)
+## 🐛 Troubleshooting
 
-### Dockerfile
-```dockerfile
-FROM python:3.11-slim
-
-# Installa Java
-RUN apt-get update && \
-    apt-get install -y openjdk-17-jdk && \
-    rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copia file
-COPY requirements.txt .
-COPY server.py .
-COPY src/ src/
-COPY lib/ lib/
-COPY bin/ bin/
-
-# Installa dipendenze Python
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Crea directory
-RUN mkdir -p /app/reports/uploads /app/reports/output /app/reports/birt /app/reports/logs
-
-EXPOSE 5000
-
-CMD ["python", "server.py"]
-```
-
-### Build e Run
-```bash
-docker build -t birt-report-server .
-docker run -p 5000:5000 -v ~/reports:/app/reports birt-report-server
-```
-
-## 🔧 Servizio Systemd (Linux)
-
-Crea `/etc/systemd/system/birt-report.service`:
-
-```ini
-[Unit]
-Description=BIRT Report Server Python
-After=network.target
-
-[Service]
-Type=simple
-User=your-user
-WorkingDirectory=/home/your-user/BirtReportServer
-Environment="PATH=/usr/bin:/usr/local/bin"
-ExecStart=/usr/bin/python3 /home/your-user/BirtReportServer/server.py
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Abilita e avvia:
-```bash
-sudo systemctl enable birt-report.service
-sudo systemctl start birt-report.service
-sudo systemctl status birt-report.service
-```
-
-## 🪟 Servizio Windows (NSSM)
-
-**1. Scarica NSSM:** https://nssm.cc/download
-
-**2. Installa il servizio:**
+### Errore: "Java non trovato"
 ```cmd
-nssm install BirtReportServer "C:\Python311\python.exe" "C:\BirtReportServer\server.py"
-nssm set BirtReportServer AppDirectory "C:\BirtReportServer"
-nssm set BirtReportServer Description "BIRT Report Generation Server"
-nssm set BirtReportServer Start SERVICE_AUTO_START
-nssm start BirtReportServer
+java -version
+REM Se non funziona, aggiungi Java al PATH
 ```
 
-## 📊 Logging
+### Errore: "Class not found"
+```cmd
+REM Ricompila
+compile.bat
 
-I log sono salvati in:
-- **Console**: Output standard
-- **File**: `~/reports/logs/server.log`
+REM Verifica
+dir bin\com\report\model\*.class
+```
 
-### Visualizza log in tempo reale
+### Errore: "BIRT libraries not found"
+```cmd
+REM Verifica librerie
+dir lib\*.jar
+
+REM Devono esserci file .jar BIRT 4.21
+```
+
+### Errore: "UnsupportedClassVersionError"
+Stai usando Java 8 invece di Java 21+.
+```cmd
+java -version  # Deve mostrare 21 o superiore
+```
+
+### Errore: "Module 'flask' not found"
+```cmd
+install.bat  # Windows
+./install.sh # Linux
+```
+
+### Timeout Generazione Report
+Aumenta timeout in `server.py` (default: 5 minuti)
+
+---
+
+## 📊 Performance
+
+### Requisiti Hardware
+- **RAM**: 2 GB liberi (minimo 1 GB)
+- **CPU**: 2+ core
+- **Disco**: 500 MB + spazio per report
+
+### Capacità
+- **Richieste simultanee**: 5-10
+- **File max**: 50 MB
+- **Timeout**: 5 minuti (configurabile)
+- **Tempo generazione**: 5-30 secondi tipico
+
+---
+
+## 🔒 Sicurezza (Produzione)
+
+### Da Implementare
+
+1. **HTTPS**
+   - Certificato SSL
+   - Reverse proxy (Nginx)
+
+2. **Autenticazione**
+   - API Key
+   - JWT Token
+
+3. **Rate Limiting**
+   ```python
+   from flask_limiter import Limiter
+   limiter = Limiter(app, default_limits=["100 per hour"])
+   ```
+
+4. **Firewall**
+   - Apri solo porta 5000
+   - Limita per IP
+
+---
+
+## 📝 Log
+
+### Posizione
+```
+C:\Users\<user>\reports\logs\server.log
+```
+
+### Visualizza in Tempo Reale
 
 **Windows:**
 ```cmd
 powershell Get-Content %USERPROFILE%\reports\logs\server.log -Wait
 ```
 
-**Linux/macOS:**
+**Linux:**
 ```bash
 tail -f ~/reports/logs/server.log
 ```
 
-## 🔒 Sicurezza (Produzione)
+---
 
-Per produzione, considera:
+## 🚢 Deploy Produzione
 
-### 1. Reverse Proxy (Nginx)
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
+### Systemd (Linux)
 
-    location / {
-        proxy_pass http://localhost:5000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
+`/etc/systemd/system/birt-report.service`:
+```ini
+[Unit]
+Description=BIRT Report Server
+After=network.target
+
+[Service]
+Type=simple
+User=your-user
+WorkingDirectory=/path/to/BirtReportServer
+ExecStart=/usr/bin/python3 server.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-### 2. HTTPS con Let's Encrypt
 ```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com
+sudo systemctl enable birt-report
+sudo systemctl start birt-report
 ```
 
-### 3. Firewall
-```bash
-# Linux (ufw)
-sudo ufw allow 5000/tcp
+### Windows Service (NSSM)
 
-# Windows Firewall (vedi guida precedente)
-```
-
-### 4. Rate Limiting
-Aggiungi a `server.py`:
-```python
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=["100 per hour"]
-)
-
-@limiter.limit("10 per minute")
-@app.route('/api/reports/generate', methods=['POST'])
-def generate_report():
-    # ...
-```
-
-Installa:
-```bash
-pip install Flask-Limiter
-```
-
-## 🐛 Risoluzione Problemi
-
-### Python non trovato
-**Windows:** Reinstalla Python e seleziona "Add Python to PATH"
-**Linux:** `sudo apt install python3`
-
-### Java non trovato
-Verifica con `java -version`. Se manca, installa Java 17+.
-
-### Errore "Module 'flask' not found"
-Esegui `install.bat` (Windows) o `./install.sh` (Linux)
-
-### Errore "BirtReportWrapper class not found"
-Compila il wrapper Java:
-```bash
-javac -d bin -cp "lib/*" src/com/report/model/BirtReportWrapper.java
-```
-
-### Porta già in uso
-Un'altra app usa la porta 5000. Cambia porta in `server.py`.
-
-### Timeout generazione report
-Aumenta il timeout in `server.py`:
-```python
-result = subprocess.run(
-    java_cmd,
-    capture_output=True,
-    text=True,
-    timeout=600  # 10 minuti
-)
-```
-
-## ⚡ Performance
-
-### Produzione (Gunicorn)
-
-Installa:
-```bash
-pip install gunicorn
-```
-
-Avvia:
-```bash
-gunicorn -w 4 -b 0.0.0.0:5000 server:app
-```
-
-- `-w 4`: 4 worker processes
-- Gestisce più richieste concorrenti
-
-### Produzione (Windows - Waitress)
-
-Installa:
 ```cmd
-pip install waitress
+nssm install BirtReportServer "C:\Python\python.exe" "C:\BirtReportServer\server.py"
+nssm start BirtReportServer
 ```
-
-Crea `serve.py`:
-```python
-from waitress import serve
-from server import app
-
-serve(app, host='0.0.0.0', port=5000, threads=4)
-```
-
-Avvia:
-```cmd
-python serve.py
-```
-
-## 📈 Vantaggi Python vs Java Puro
-
-| Caratteristica | Python + Java | Solo Java |
-|----------------|---------------|-----------|
-| Multipiattaforma | ✅ Eccellente | ⚠️ Buono |
-| Facilità Setup | ✅ Semplice | ⚠️ Media |
-| Web Framework | ✅ Flask (robusto) | ⚠️ HttpServer (basico) |
-| Parsing Multipart | ✅ Werkzeug | ⚠️ Manuale |
-| Manutenzione | ✅ Facile | ⚠️ Media |
-| Performance | ✅ Buona | ✅ Ottima |
-| Memoria | ~150MB | ~100MB |
-
-## 🎯 Quando Usare Questa Versione
-
-✅ **Usa Python SE:**
-- Vuoi massima compatibilità multipiattaforma
-- Preferisci Python a Java per il server HTTP
-- Vuoi un framework web robusto (Flask)
-- Hai già BIRT in Java e vuoi solo un wrapper
-
-❌ **Usa Java Puro SE:**
-- Vuoi minimizzare dipendenze
-- Performance è critica
-- Team solo Java
-
-## 💡 Tips
-
-1. **Virtual Environment**: Usa sempre venv per isolare dipendenze
-2. **Log Rotation**: Configura logrotate per gestire log grandi
-3. **Monitoring**: Usa `htop` (Linux) o Task Manager (Windows)
-4. **Backup**: Script cron/task per backup directory output
 
 ---
 
-## 🚀 Quick Start
+## 🐳 Docker (Opzionale)
 
-```bash
-# 1. Installa dipendenze
-./install.sh        # Linux/macOS
-install.bat         # Windows
+```dockerfile
+FROM python:3.14-slim
 
-# 2. Compila Java wrapper
-javac -d bin -cp "lib/*" src/com/report/model/BirtReportWrapper.java
+RUN apt-get update && apt-get install -y openjdk-21-jdk
 
-# 3. Avvia server
-./start-server.sh   # Linux/macOS
-start-server.bat    # Windows
+WORKDIR /app
+COPY . .
 
-# 4. Test
-curl http://localhost:5000/api/reports/health
+RUN pip install -r requirements.txt
+RUN javac -d bin -cp "lib/*" src/com/report/model/BirtReportWrapper.java
+
+EXPOSE 5000
+CMD ["python", "server.py"]
 ```
 
-Done! 🎉
+```bash
+docker build -t birt-server .
+docker run -p 5000:5000 birt-server
+```
+
+---
+
+## 📚 Comandi Utili
+
+```cmd
+REM Windows - Setup completo
+setup.bat && install.bat && compile.bat && start-server.bat
+
+REM Ricompila e riavvia
+compile.bat && start-server.bat
+
+REM Test health check
+curl http://localhost:5000/api/reports/health
+
+REM Pulisci file vecchi (7 giorni)
+curl -X POST http://localhost:5000/api/reports/cleanup ^
+  -H "Content-Type: application/json" ^
+  -d "{\"days\": 7}"
+```
+
+---
+
+## ✅ Checklist Pre-Produzione
+
+- [ ] Java 21+ installato e nel PATH
+- [ ] Python 3.8+ installato
+- [ ] Librerie BIRT 4.21 in `lib/`
+- [ ] Codice compilato in `bin/`
+- [ ] Dipendenze Python installate
+- [ ] Test con `test-client.html` OK
+- [ ] Log funzionanti
+- [ ] Firewall configurato
+- [ ] HTTPS abilitato
+- [ ] Autenticazione implementata
+- [ ] Backup configurato
+- [ ] Monitoring attivo
+
+---
+
+## 📞 Supporto
+
+### Log
+```
+C:\Users\<user>\reports\logs\server.log
+```
+
+### Test Manuale Java
+```cmd
+java -cp "bin;lib/*" com.report.model.BirtReportWrapper ^
+  test.rptdesign ^
+  https://jsonplaceholder.typicode.com/users ^
+  C:\Users\stage01\reports\output ^
+  C:\Users\stage01\reports\birt ^
+  PDF
+```
+
+### Verifica Versioni
+```cmd
+java -version    # Deve essere 21+
+python --version # Deve essere 3.8+
+```
+
+---
+
+## 📄 Licenza
+
+Personalizza secondo le tue esigenze.
+
+---
+
+**Versione:** 1.0.0  
+**Data:** 2025-01-16  
+**Autore:** Stage2025

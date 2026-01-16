@@ -12,16 +12,31 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 /**
- * Wrapper CLI per BirtDesignToDocument
- * Può essere chiamato da Python tramite subprocess
+ * Wrapper CLI per generazione report BIRT
+ * Compatibile con Java 21 e BIRT 4.21
  * 
- * Usage: java com.report.model.BirtReportWrapper <birtFile> <jsonApiUrl> <outputDir> <birtHome> <format>
+ * Usage:
+ * java com.report.model.BirtReportWrapper <birtFile> <jsonApiUrl> <outputDir> <birtHome> <format>
+ * 
+ * Esempio:
+ * java -cp "bin;lib/*" com.report.model.BirtReportWrapper \
+ *      "uploads/report.rptdesign" \
+ *      "https://api.example.com/data" \
+ *      "C:/Users/stage01/reports/output" \
+ *      "C:/Users/stage01/reports/birt" \
+ *      "PDF"
  */
 public class BirtReportWrapper {
     
     public static void main(String[] args) {
+        // Validazione argomenti
         if (args.length != 5) {
+            System.err.println("Errore: Numero argomenti non valido");
+            System.err.println();
             System.err.println("Usage: java BirtReportWrapper <birtFile> <jsonApiUrl> <outputDir> <birtHome> <format>");
+            System.err.println();
+            System.err.println("Esempio:");
+            System.err.println("  java BirtReportWrapper report.rptdesign https://api.com/data output/ birt/ PDF");
             System.exit(1);
         }
         
@@ -31,7 +46,18 @@ public class BirtReportWrapper {
         String birtHome = args[3];
         String format = args[4];
         
+        // Log parametri (per debug)
+        System.out.println("=== BIRT Report Wrapper ===");
+        System.out.println("File BIRT:   " + birtFile);
+        System.out.println("API JSON:    " + jsonApiUrl);
+        System.out.println("Output Dir:  " + outputDir);
+        System.out.println("BIRT Home:   " + birtHome);
+        System.out.println("Formato:     " + format);
+        System.out.println("===========================");
+        System.out.println();
+        
         try {
+            // Crea generatore
             BirtDesignToDocument generator = new BirtDesignToDocument(
                 jsonApiUrl,
                 birtFile,
@@ -39,11 +65,12 @@ public class BirtReportWrapper {
                 birtHome
             );
             
+            // Genera documento
             String outputPath = generator.generateDocument(format);
             
             if (outputPath != null) {
-                // Stampa il path del file generato su stdout
-                System.out.println(outputPath);
+                // Stampa il path del file generato (importante per Python)
+                System.out.println("SUCCESS:" + outputPath);
                 System.exit(0);
             } else {
                 System.err.println("Errore: generazione report fallita");
@@ -51,7 +78,7 @@ public class BirtReportWrapper {
             }
             
         } catch (Exception e) {
-            System.err.println("Errore: " + e.getMessage());
+            System.err.println("Errore durante la generazione: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
@@ -59,7 +86,8 @@ public class BirtReportWrapper {
 }
 
 /**
- * Classe BirtDesignToDocument
+ * Classe per generazione documenti BIRT
+ * Supporta PDF, XLSX, HTML, DOC
  */
 class BirtDesignToDocument {
     private final String sourceJson;
@@ -75,6 +103,9 @@ class BirtDesignToDocument {
         this.birtHome = birtHome;
     }
     
+    /**
+     * Genera un documento nel formato specificato
+     */
     public String generateDocument(String format) throws Exception {
         switch (format.toUpperCase()) {
             case "PDF":
@@ -91,11 +122,14 @@ class BirtDesignToDocument {
         }
     }
     
+    /**
+     * Genera documento PDF
+     */
     private String generatePDF() throws Exception {
         try {
             EngineConfig config = new EngineConfig();
             config.setEngineHome(birtHome);
-            config.setLogConfig(birtHome, Level.FINE);
+            config.setLogConfig(birtHome, Level.WARNING); // Solo WARNING per ridurre log
             
             Platform.startup(config);
             IReportEngineFactory factory = (IReportEngineFactory) Platform.createFactoryObject(
@@ -122,6 +156,7 @@ class BirtDesignToDocument {
             engine.destroy();
             Platform.shutdown();
             
+            System.out.println("PDF generato: " + fullPath);
             return fullPath;
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,11 +164,14 @@ class BirtDesignToDocument {
         }
     }
     
+    /**
+     * Genera documento DOC (Word)
+     */
     private String generateDOC() throws Exception {
         try {
             EngineConfig config = new EngineConfig();
             config.setEngineHome(birtHome);
-            config.setLogConfig(birtHome, Level.FINE);
+            config.setLogConfig(birtHome, Level.WARNING);
             
             Platform.startup(config);
             IReportEngineFactory factory = (IReportEngineFactory) Platform.createFactoryObject(
@@ -160,6 +198,7 @@ class BirtDesignToDocument {
             engine.destroy();
             Platform.shutdown();
             
+            System.out.println("DOC generato: " + fullPath);
             return fullPath;
         } catch (Exception e) {
             e.printStackTrace();
@@ -167,11 +206,14 @@ class BirtDesignToDocument {
         }
     }
     
+    /**
+     * Genera documento XLSX (Excel)
+     */
     private String generateXLSX() throws Exception {
         try {
             EngineConfig config = new EngineConfig();
             config.setEngineHome(birtHome);
-            config.setLogConfig(birtHome, Level.FINE);
+            config.setLogConfig(birtHome, Level.WARNING);
             
             Platform.startup(config);
             IReportEngineFactory factory = (IReportEngineFactory) Platform.createFactoryObject(
@@ -198,6 +240,7 @@ class BirtDesignToDocument {
             engine.destroy();
             Platform.shutdown();
             
+            System.out.println("XLSX generato: " + fullPath);
             return fullPath;
         } catch (Exception e) {
             e.printStackTrace();
@@ -205,11 +248,14 @@ class BirtDesignToDocument {
         }
     }
     
+    /**
+     * Genera documento HTML
+     */
     private String generateHTML() throws Exception {
         try {
             EngineConfig config = new EngineConfig();
             config.setEngineHome(birtHome);
-            config.setLogConfig(birtHome, Level.FINE);
+            config.setLogConfig(birtHome, Level.WARNING);
             
             Platform.startup(config);
             IReportEngineFactory factory = (IReportEngineFactory) Platform.createFactoryObject(
@@ -236,6 +282,7 @@ class BirtDesignToDocument {
             engine.destroy();
             Platform.shutdown();
             
+            System.out.println("HTML generato: " + fullPath);
             return fullPath;
         } catch (Exception e) {
             e.printStackTrace();
@@ -243,13 +290,19 @@ class BirtDesignToDocument {
         }
     }
     
+    /**
+     * Imposta i parametri JSON per il report
+     */
     private void setJsonParameters(IReportEngine engine, IReportRunnable design, IRunAndRenderTask task) throws Exception {
         if(sourceJson.startsWith("http")) {
+            // API URL - passa direttamente
             task.setParameterValue("JsonSource", json);
             task.setParameterValue("json", sourceJson);
         } else {
+            // File locale - leggi contenuto
             json = new String(Files.readAllBytes(Paths.get(sourceJson)), StandardCharsets.UTF_8);
             
+            // Imposta parametri dinamicamente
             IGetParameterDefinitionTask paramTask = engine.createGetParameterDefinitionTask(design);
             @SuppressWarnings("unchecked")
             Collection<IParameterDefnBase> params = paramTask.getParameterDefns(false);
