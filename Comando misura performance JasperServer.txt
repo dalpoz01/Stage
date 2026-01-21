@@ -1,0 +1,9 @@
+Measure-Command { curl.exe -u user:bitnami -X POST "http://localhost:8088/jasperserver/rest_v2/reports/Report/test.pdf?json=https://jsonplaceholder.typicode.com/users" }
+
+Measure-Command { curl.exe -u user:bitnami -X POST "http://localhost:8088/jasperserver/rest_v2/reports/Report/test.pdf?json=https://2cc1de8b-6155-4fad-bf6a-aed4221a4810.mock.pstmn.io/user" }
+
+curl http://localhost:5000/api/reports/health
+
+curl http://localhost:5000/api/reports/formats
+
+curl -X POST http://localhost:5000/api/reports/generate -F "birtFile=@C:\Users\stage01\Desktop\Customers.rptdesign" -F "jsonApiUrl=https://2cc1de8b-6155-4fad-bf6a-aed4221a4810.mock.pstmn.io/user" -F "format=PDF" --output C:\Users\stage01\Desktop\report_generato.pdf
